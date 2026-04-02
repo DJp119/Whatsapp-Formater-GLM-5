@@ -11,8 +11,14 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Get the session from the URL hash
-        const { error } = await supabase.auth.getSessionFromUrl();
+        // Wait a moment for the URL hash to be processed
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // Check if we have a session
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
 
         if (error) {
           console.error("Auth callback error:", error);
@@ -20,12 +26,33 @@ export default function AuthCallbackPage() {
           return;
         }
 
-        setStatus("success");
+        if (session) {
+          setStatus("success");
+          // Redirect to saved messages after 2 seconds
+          setTimeout(() => {
+            router.push("/saved");
+          }, 2000);
+        } else {
+          // Try to get session from the URL
+          const hash = window.location.hash;
+          if (hash && hash.includes("access_token")) {
+            // The hash contains the token, Supabase should have processed it
+            // Wait and try again
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            const {
+              data: { session: retrySession },
+            } = await supabase.auth.getSession();
 
-        // Redirect to saved messages after 2 seconds
-        setTimeout(() => {
-          router.push("/saved");
-        }, 2000);
+            if (retrySession) {
+              setStatus("success");
+              setTimeout(() => {
+                router.push("/saved");
+              }, 2000);
+              return;
+            }
+          }
+          setStatus("error");
+        }
       } catch (err) {
         console.error("Unexpected error:", err);
         setStatus("error");
@@ -66,7 +93,7 @@ export default function AuthCallbackPage() {
               Email Verified!
             </h1>
             <p className="text-gray-500 dark:text-gray-400">
-              Redirecting you to your saved messages...
+              Redirecting to your saved messages...
             </p>
           </>
         )}
@@ -92,14 +119,22 @@ export default function AuthCallbackPage() {
               Verification Failed
             </h1>
             <p className="text-gray-500 dark:text-gray-400">
-              The link may have expired. Please try signing up again.
+              The link may have expired. Please try again or contact support.
             </p>
-            <a
-              href="/auth/signup"
-              className="inline-block text-whatsapp-teal hover:underline"
-            >
-              Go to Sign Up
-            </a>
+            <div className="flex gap-4 justify-center">
+              <a
+                href="/auth/signup"
+                className="text-whatsapp-teal hover:underline"
+              >
+                Sign Up
+              </a>
+              <a
+                href="/auth/login"
+                className="text-gray-500 hover:underline"
+              >
+                Login
+              </a>
+            </div>
           </>
         )}
       </div>
