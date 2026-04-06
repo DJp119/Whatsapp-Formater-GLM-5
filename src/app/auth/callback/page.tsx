@@ -1,17 +1,19 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
+type Status = "loading" | "success" | "error";
+
 export default function AuthCallbackPage() {
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [status, setStatus] = useState<Status>("loading");
   const router = useRouter();
 
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Wait a moment for the URL hash to be processed
+        // Wait for the URL hash to be processed
         await new Promise((resolve) => setTimeout(resolve, 500));
 
         // Check if we have a session

@@ -1,15 +1,33 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// For client-side usage
-// During build time, we use empty strings to prevent build errors
-// In production, these will be replaced with actual values from environment
-export const supabase =
-  typeof window !== "undefined"
-    ? createClient(supabaseUrl, supabaseAnonKey)
-    : createClient(supabaseUrl, supabaseAnonKey);
+// Create a lazy-initialized client that only creates when env vars are available
+let supabaseInstance: SupabaseClient | null = null;
+
+function getSupabase(): SupabaseClient {
+  if (!supabaseInstance) {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      // Return a mock client for build time / missing env vars
+      // This allows the build to succeed even without env vars
+      console.warn("Supabase environment variables are not set. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY");
+    }
+    supabaseInstance = createClient(
+      supabaseUrl || "https://placeholder.supabase.co",
+      supabaseAnonKey || "placeholder-key"
+    );
+  }
+  return supabaseInstance;
+}
+
+// Export as a getter to avoid initialization at build time
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(target, prop) {
+    const client = getSupabase();
+    return client[prop as keyof SupabaseClient];
+  }
+});
 
 export type User = {
   id: string;
