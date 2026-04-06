@@ -8,7 +8,7 @@ import {
   CheckIcon,
   ShareIcon,
 } from "lucide-react";
-import { copyToClipboard, getWhatsAppShareUrl } from "@/lib/utils";
+import { copyToClipboard, shareToWhatsApp } from "@/lib/utils";
 
 interface ActionButtonsProps {
   text: string;
@@ -37,9 +37,7 @@ export function ActionButtons({
 
   const handleWhatsAppShare = () => {
     if (!text) return;
-
-    const url = getWhatsAppShareUrl(text);
-    window.open(url, "_blank");
+    shareToWhatsApp(text);
   };
 
   return (

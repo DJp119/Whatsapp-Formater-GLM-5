@@ -1,29 +1,28 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-// Create a lazy-initialized client that only creates when env vars are available
+// Lazy-initialized Supabase client to avoid build-time errors
+// when environment variables aren't available during static generation
 let supabaseInstance: SupabaseClient | null = null;
 
 function getSupabase(): SupabaseClient {
   if (!supabaseInstance) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
     if (!supabaseUrl || !supabaseAnonKey) {
-      // Return a mock client for build time / missing env vars
-      // This allows the build to succeed even without env vars
-      console.warn("Supabase environment variables are not set. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY");
+      throw new Error(
+        "Missing Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment."
+      );
     }
-    supabaseInstance = createClient(
-      supabaseUrl || "https://placeholder.supabase.co",
-      supabaseAnonKey || "placeholder-key"
-    );
+
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
   }
   return supabaseInstance;
 }
 
 // Export as a getter to avoid initialization at build time
 export const supabase = new Proxy({} as SupabaseClient, {
-  get(target, prop) {
+  get(_target, prop) {
     const client = getSupabase();
     return client[prop as keyof SupabaseClient];
   }

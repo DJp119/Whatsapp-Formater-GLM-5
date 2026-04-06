@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import React, { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -7,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { getCurrentUser, getMessages, deleteMessage, signOut } from "@/lib/supabase";
 import { TrashIcon, CopyIcon, CheckIcon, SendIcon } from "lucide-react";
-import { copyToClipboard, getWhatsAppShareUrl } from "@/lib/utils";
+import { copyToClipboard, shareToWhatsApp } from "@/lib/utils";
 
 interface SavedMessage {
   id: string;
@@ -62,7 +64,7 @@ export default function SavedMessagesPage() {
   };
 
   const handleShare = (text: string) => {
-    window.open(getWhatsAppShareUrl(text), "_blank");
+    shareToWhatsApp(text);
   };
 
   const handleDelete = async (id: string) => {

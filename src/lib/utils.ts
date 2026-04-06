@@ -98,7 +98,26 @@ export function cleanText(text: string): string {
 
 export function getWhatsAppShareUrl(text: string): string {
   const encodedText = encodeURIComponent(text);
-  return `https://wa.me/?text=${encodedText}`;
+  return `https://api.whatsapp.com/send?text=${encodedText}`;
+}
+
+export function shareToWhatsApp(text: string): void {
+  if (!text) return;
+
+  // Try Web Share API first (better mobile support)
+  if (navigator.share) {
+    navigator
+      .share({
+        text: text,
+      })
+      .catch(() => {
+        // Fall back to WhatsApp URL if share fails
+        window.open(getWhatsAppShareUrl(text), "_blank");
+      });
+  } else {
+    // Fall back to WhatsApp URL
+    window.open(getWhatsAppShareUrl(text), "_blank");
+  }
 }
 
 export function copyToClipboard(text: string): Promise<boolean> {
